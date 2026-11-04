@@ -90,7 +90,6 @@ export function toWinAnsi(s: string): string {
     .replace(/[“”]/g, '"')
     .replace(/[–—]/g, "-")
     .replace(/…/g, "...")
-    // eslint-disable-next-line no-control-regex
     .replace(/[^\n\x20-\x7E -ÿ]/g, "?");
 }
 

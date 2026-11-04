@@ -23,6 +23,7 @@ export function kindOf(file: { name: string; type?: string }): Kind | null {
   const t = file.type ?? "";
   if (t.startsWith("image/")) return "image";
   if (t === "application/pdf") return "pdf";
+  if (t === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") return "docx";
   if (t.startsWith("text/")) return "text";
   return null;
 }

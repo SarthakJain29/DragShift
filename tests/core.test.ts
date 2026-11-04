@@ -87,3 +87,28 @@ describe("text helpers", () => {
     expect(wrapLine("", 5, m)).toEqual([""]);
   });
 });
+
+import { clampCenter, hitTest, petalSpan } from "@/lib/geometry";
+describe("radial geometry", () => {
+  it("hit-tests petals clockwise from 12 o'clock", () => {
+    expect(hitTest(0, -100, 4)).toBe(0); // up
+    expect(hitTest(100, 0, 4)).toBe(1); // right
+    expect(hitTest(0, 100, 4)).toBe(2); // down
+    expect(hitTest(-100, 0, 4)).toBe(3); // left
+    expect(hitTest(-1, -100, 4)).toBe(0); // just left of 12 still petal 0
+  });
+  it("detects hub and outside", () => {
+    expect(hitTest(5, 5, 3)).toBe(-2);
+    expect(hitTest(0, -300, 3)).toBe(-1);
+    expect(hitTest(0, -55, 3)).toBe(-1); // gap between hub and petals
+  });
+  it("spans tile the circle", () => {
+    expect(petalSpan(3, 0)).toEqual([-60, 60]);
+    expect(petalSpan(3, 2)[1] - petalSpan(3, 0)[0]).toBe(360);
+  });
+  it("clamps to the viewport", () => {
+    expect(clampCenter(10, 10, 1000, 800)).toEqual([200, 200]);
+    expect(clampCenter(990, 790, 1000, 800)).toEqual([800, 600]);
+    expect(clampCenter(5, 5, 300, 300)).toEqual([200, 200]);
+  });
+});
