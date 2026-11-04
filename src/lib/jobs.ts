@@ -94,7 +94,7 @@ function summarize(key: string, files: File[], outs: OutFile[], dims?: { from?: 
         detail: dims?.from && dims?.to ? `${dims.from[0]}×${dims.from[1]} → ${dims.to[0]}×${dims.to[1]} · ${names}` : names,
         outs,
       };
-    case "Split": return { title: `Split into ${outs.length} PDFs`, detail: names, outs };
+    case "Split": return { title: `Split into ${outs.length} PDF${outs.length > 1 ? "s" : ""}`, detail: names, outs };
     case "Merge": return { title: `Merged ${files.length} PDFs`, detail: `${humanSize(after)} · ${names}`, outs };
     case "Rotate": return { title: "Rotated 90°", detail: names, outs };
     default: return { title: name, detail: names, outs };

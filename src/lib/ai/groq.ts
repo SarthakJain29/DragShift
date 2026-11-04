@@ -1,11 +1,13 @@
 import type { AiProvider } from "./types";
 
 export function groqProvider(key: string): AiProvider {
-  const textModel = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
-  const visionModel = process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
+  const textModel = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+  // Groq model catalogs change often; set GROQ_VISION_MODEL to enable image tasks on Groq.
+  const visionModel = process.env.GROQ_VISION_MODEL;
   return {
     name: "groq",
     async complete({ system, prompt, imageBase64 }) {
+      if (imageBase64 && !visionModel) throw new Error("Groq vision model not configured");
       const content = imageBase64
         ? [
             { type: "text", text: prompt },
@@ -18,7 +20,7 @@ export function groqProvider(key: string): AiProvider {
         body: JSON.stringify({
           model: imageBase64 ? visionModel : textModel,
           temperature: 0.4,
-          max_tokens: 400,
+          max_tokens: 1200,
           messages: [
             { role: "system", content: system },
             { role: "user", content },

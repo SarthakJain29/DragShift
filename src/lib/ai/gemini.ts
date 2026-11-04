@@ -1,6 +1,6 @@
 import type { AiProvider } from "./types";
 
-export function geminiProvider(key: string, model = process.env.GEMINI_MODEL || "gemini-2.0-flash"): AiProvider {
+export function geminiProvider(key: string, model = process.env.GEMINI_MODEL || "gemini-flash-latest"): AiProvider {
   return {
     name: "gemini",
     async complete({ system, prompt, imageBase64 }) {
@@ -12,7 +12,7 @@ export function geminiProvider(key: string, model = process.env.GEMINI_MODEL || 
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
           contents: [{ role: "user", parts }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 400 },
+          generationConfig: { temperature: 0.4, maxOutputTokens: 600 },
         }),
         signal: AbortSignal.timeout(20_000),
       });

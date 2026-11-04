@@ -160,7 +160,7 @@ input[type="range"] { accent-color: var(--violet); }
 .radial { position: absolute; animation: bloom 0.42s cubic-bezier(0.2, 1.4, 0.4, 1); }
 @keyframes bloom { from { transform: scale(0.4); opacity: 0; } }
 .radial svg { display: block; overflow: visible; filter: drop-shadow(0 24px 50px rgba(0, 0, 0, 0.55)); }
-.petal-shape { fill: rgba(30, 27, 58, 0.78); stroke: rgba(255, 255, 255, 0.2); stroke-width: 1.2; stroke-linejoin: round; transition: fill 0.12s, transform 0.18s; transform-origin: 200px 200px; }
+.petal-shape { fill: rgba(26, 23, 52, 0.94); stroke: rgba(255, 255, 255, 0.2); stroke-width: 1.2; stroke-linejoin: round; transition: fill 0.12s, transform 0.18s; transform-origin: 200px 200px; }
 .petal { animation: petalIn 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) backwards; transform-origin: 200px 200px; }
 @keyframes petalIn { from { opacity: 0; transform: scale(0.7); } }
 .petal.on .petal-shape { stroke: #fff; transform: scale(1.045); filter: drop-shadow(0 0 14px var(--hue)); }
