@@ -1,67 +1,64 @@
-# ShiftDrop
+# DragShift
 
-A native macOS rewrite of [DragShift](https://github.com/llamaboi55/DragShift) (MIT): start dragging a
-file in Finder, press **Control**, and drop it on a slice of the radial menu that opens under the
-cursor. The result is saved next to the original; the original is never changed.
+**Drag a file, pick a slice, done.** A radial drop menu that converts, compresses, resizes, splits and merges images, PDFs and docs — entirely in your browser — with optional AI summaries, smart file names and alt text.
 
-Swift + AppKit only — no Python, Qt or extra libraries. Menu-bar app, no Dock icon.
+![DragShift home](docs/screenshots/home.png)
 
-## Build and install
+| Radial menu under your cursor | Results with before/after |
+|---|---|
+| ![drag and drop](docs/screenshots/drag-drop.png) | ![results](docs/screenshots/results.png) |
 
-Needs the Xcode Command Line Tools (Swift 5.10+), macOS 13+.
+> Two apps live in this repo: the **web app** (this README, repo root) and the original **native macOS menu-bar app** in [`macos/`](macos/README.md), which brings the same menu to Finder drags system-wide.
 
-```bash
-./scripts/build-app.sh            # builds build/ShiftDrop.app
-./scripts/build-app.sh --install  # also copies it to ~/Applications and opens it
+## Features
+
+- **Radial drop menu** — drag a file over the page and petals bloom under the cursor; release on one to run it. Hover the hub to flip between **Convert / Tools / AI**. Release elsewhere to get the same menu in click mode. Every action is also reachable from plain buttons (keyboard / touch friendly).
+- **Convert** — images ⇄ PNG / JPG / WEBP, images → PDF (many images → one PDF), PDF → PNG / JPG / TXT, DOCX → PDF / TXT, text/markdown/CSV/JSON → PDF.
+- **Tools** — compress (shows % saved), resize (percent / longest side / width / height), PDF split / rotate / merge.
+- **AI** — summarize a document, suggest a file name (and download the renamed copy), write image alt text, or ask "what should I do with this?". Powered by Gemini or Groq; works offline in **mock mode** with no key.
+- **Private by design** — files never leave the browser; only extracted text (or a small downscaled image) is sent to `/api/ai` when you explicitly use an AI action.
+- Samples, paste-from-clipboard, per-job progress / error states, download-all as ZIP, quality & DPI settings.
+
+## Tech stack
+
+Next.js 15 (App Router) · React 19 · TypeScript (strict) · pdf-lib · pdf.js · JSZip · Canvas API · Vitest · ESLint. Hand-written CSS, no UI kit.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[User drops file] --> A[App.tsx<br/>drag/drop + state]
+  A --> R[buildRings<br/>actions.ts]
+  R --> M[RadialMenu<br/>SVG + geometry.ts hit-test]
+  M -->|petal chosen| J[jobs.ts runJob]
+  J --> C[convert/*<br/>Canvas · pdf-lib · pdf.js · JSZip]
+  J -->|ai:*| AC[ai/client.ts]
+  AC --> API[/api/ai route/]
+  API --> P{provider chain}
+  P --> G[Gemini]
+  P --> Q[Groq]
+  P --> K[Mock offline]
+  C --> RC[ResultCard<br/>download / zip]
+  AC --> RC
 ```
 
-## Use
-
-1. Start dragging a file (image, PDF, Word or text) in Finder or on the desktop.
-2. Press the trigger key (**Control** by default; change it in the menu bar → Trigger Key).
-3. Drop on a slice. A notification shows what changed, with **Open**, **Show in Finder** and **Undo**
-   (Undo moves the new file to the Trash).
-
-Tap the trigger key again — or rest on the centre after visiting a slice — to switch between
-**Convert** and **Tools**. Finder → right-click → **Open With → ShiftDrop** and menu bar →
-**Open a File…** open the same menu in click mode.
-
-| File | Convert to | Tools |
-|---|---|---|
-| Images (JPG, PNG, HEIC, WEBP, TIFF, AVIF, BMP, GIF, ICO) | Any format this Mac can write, or PDF. Several images → one combined PDF | Compress · Resize |
-| PDF | JPG or PNG (one per page), TXT | Split · Rotate · Merge (drop several) |
-| Word (.docx) | PDF, TXT | — |
-| Text (.txt, .md, .csv, .json…) | PDF, DOCX | — |
-
-Menu bar settings: trigger key, where results go (next to the original or a `ShiftDrop` subfolder),
-image quality, PDF → image resolution, pause, start at login.
-
-## How it works (from reading DragShift's source)
-
-- **Trigger** (`DragWatcher.swift`): every 15 ms it polls `NSEvent.pressedMouseButtons` and
-  `NSEvent.modifierFlags`, which give the global mouse/modifier state without Accessibility or Input
-  Monitoring permission. Button held + moved 10 px + trigger key → open the menu. Unlike the
-  original, it also checks that the system drag pasteboard changed since the mouse went down and
-  holds file URLs, so dragging a window or text with the key held doesn't pop the menu.
-- **Menu** (`RadialMenu.swift`): a borderless non-activating panel at pop-up-menu level, registered as a
-  drag destination. It reads the dragged files from the drag pasteboard so the slices appear at once,
-  and always answers `.copy` so a drop can never move the original. The glass is an
-  `NSVisualEffectView` masked to the petal shapes (DragShift instead captures the screen and refracts
-  it with numpy, which needs Screen Recording permission).
-- **Actions** (`Converters.swift`): ImageIO for images (EXIF rotation applied), PDFKit for PDFs,
-  `NSAttributedString` + Core Text for Word/text. Output is written to a hidden temp file and renamed.
-
-## Headless commands (for scripts and testing)
+## Getting started
 
 ```bash
-B=build/ShiftDrop.app/Contents/MacOS/ShiftDrop
-$B --rings photo.jpg                                  # what the menu offers
-$B --run convert:PNG photo.jpg                        # convert
-$B --run tool:Resize --resize=longest:1200 photo.jpg  # percent:50, width:800, height:600
-$B --snapshot menu.png 0 0 photo.jpg                  # render the menu (hover petal 0, ring 0)
+npm install
+cp .env.example .env.local   # optional – leave keys empty for mock AI
+npm run dev                  # http://localhost:3000
 ```
 
-## Not yet ported
+Other scripts: `npm test`, `npm run lint`, `npm run typecheck`, `npm run build`.
+Full setup, env vars and deployment notes are in [developer.md](developer.md); a feature-by-feature walkthrough is in [CHANGES.md](CHANGES.md).
 
-Crop, Edit, Annotate, Redact, Add BG, Metadata, PDF compress/protect/extract images, PDF → DOCX, and
-compress-to-target-size. WEBP output depends on the macOS version (hidden when ImageIO can't write it).
+## Roadmap
+
+- HEIC input, GIF/ICO output, crop & annotate, PDF compress/protect
+- Web-worker pipeline for very large files; PWA/offline install
+- Browser extension to open the menu on any `<img>`
+
+## License
+
+MIT
